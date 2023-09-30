@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Face Detection</title>
+  <script src="face-api.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      flex-direction: column;
+
+      background-color: #f8f9fa;
+      animation: vividBackground 3s infinite alternate;
+    }
+
+
+       
+    @keyframes vividBackground {
+        0% {
+          background-color: #3677b7; 
+      }
+      50%{
+          background-color: #1d9c9c;
+        }
+        100% {
+        background-color: #bf67dc; 
+      }
+    }   
+
+    #video-container {
+      position: relative;
+    }
+
+    #video {
+      width: 100%;
+      max-width: 720px;
+      background-color: #000;
+      border-radius: 8px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .text
+    {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    canvas {
+      position: absolute;
+      /* top: 0;
+      left: 0; */
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: 24px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="text">Face Detection</h1>
+  <div id="video-container">
+    <video id="video" width="720" height="560" autoplay muted></video>
+  </div>
+  <script>
+    const video = document.getElementById('video')
+    Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri('/face-api models'),
+      faceapi.nets.faceLandmark68Net.loadFromUri('/face-api models'),
+      faceapi.nets.faceRecognitionNet.loadFromUri('/face-api models'),
+      faceapi.nets.faceExpressionNet.loadFromUri('/face-api models')
+      ]).then(startVideo)
+      function startVideo() {
+      navigator.getUserMedia(
+          { video: {} },
+          stream => video.srcObject = stream,
+          err => console.error(err)
+      )
+      }
+      video.addEventListener('play', () => {
+      const canvas = faceapi.createCanvasFromMedia(video)
+      document.body.append(canvas)
+      const displaySize = { width: video.width, height: video.height }
+      faceapi.matchDimensions(canvas, displaySize)
+      setInterval(async () => {
+          const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
+          const resizedDetections = faceapi.resizeResults(detections, displaySize)
+          canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
+          faceapi.draw.drawDetections(canvas, resizedDetections)
+          // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
+          // faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
+      }, 100)
+      })
+  </script>
+</body>
+</html>
