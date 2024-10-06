@@ -15,6 +15,22 @@ const toggleLandmarksButton = document.getElementById('toggle-landmarks');
 const feedbackForm = document.getElementById('feedback-form');
 
 /**
+ * Requests camera permission from the user.
+ */
+async function requestCameraPermission() {
+    try {
+        // Request access to the camera
+        videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = videoStream;
+        video.play();
+        console.log('Camera permission granted and video stream started.');
+    } catch (error) {
+        console.error('Error accessing the camera: ', error);
+        alert('Camera access denied. Please enable camera permissions in your browser settings.');
+    }
+}
+
+/**
  * Starts the video stream and loads face-api models.
  */
 async function startVideo() {
@@ -31,11 +47,8 @@ async function startVideo() {
         ]);
         console.log('Loaded face detection models...');
 
-        // Get User Media
-        videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = videoStream;
-        video.play();
-        console.log('Video stream started.');
+        // Request Camera Permission
+        await requestCameraPermission();
 
         startButton.disabled = true;
         stopButton.disabled = false;
@@ -60,6 +73,8 @@ function stopVideo() {
     startButton.disabled = false;
     stopButton.disabled = true;
 
+    // Display the feedback form
+    document.getElementById('feedback-form').style.display = 'flex';
 }
 
 /**
@@ -224,14 +239,5 @@ document.getElementById('submit-feedback').addEventListener('click', function() 
     document.getElementById('feedback-form').style.display = 'none'; // Hide the form after submission
 });
 
-// Call this function when you stop the video to show the feedback form
-function stopVideo() {
-    videoStream.getTracks().forEach(track => track.stop());
-    video.srcObject = null;
-    startButton.disabled = false;
-    stopButton.disabled = true;
 
-    // Display the feedback form
-    document.getElementById('feedback-form').style.display = 'flex';
-}
 
