@@ -164,7 +164,7 @@ function initializeCanvasAndFaceDetection() {
         } catch (err) {
             console.error('Error during face detection:', err);
         }
-    }, 100); // Runs every 200ms
+    }, 200); // Runs every 200ms
 
     // Handle Window Resize
     window.addEventListener('resize', () => {
@@ -183,10 +183,29 @@ function updateResultsList(detections) {
     detections.forEach((detection, index) => {
         const resultItem = document.createElement('li');
         const expressions = detection.expressions;
-        // Find the expression with the highest probability
-        const sortedExpressions = Object.entries(expressions).sort((a, b) => b[1] - a[1]);
-        const dominantExpression = sortedExpressions[0][0];
-        resultItem.textContent = `Face ${index + 1}: ${dominantExpression} (${(sortedExpressions[0][1] * 100).toFixed(2)}%)`;
+        // // Find the expression with the highest probability
+        // const sortedExpressions = Object.entries(expressions).sort((a, b) => b[1] - a[1]);
+        // const dominantExpression = sortedExpressions[0][0];
+        // resultItem.textContent = `Face ${index + 1}: ${dominantExpression} (${(sortedExpressions[0][1] * 100).toFixed(2)}%)`;
+        // resultsList.appendChild(resultItem);
+
+        // Create a string to hold the detected expressions
+        let expressionsText = `Face ${index + 1}: `;
+        const detectedExpressions = Object.entries(expressions).filter(([_, probability]) => probability > 0.5);
+
+        if (detectedExpressions.length > 0) {
+            // Iterate over filtered expressions and their probabilities
+            detectedExpressions.forEach(([expression, probability]) => {
+                expressionsText += `${expression}: ${(probability * 100).toFixed(2)}%, `;
+            });
+
+            // Remove the trailing comma and space
+            expressionsText = expressionsText.slice(0, -2); 
+        } else {
+            expressionsText += 'No dominant expressions detected.';
+        }
+
+        resultItem.textContent = expressionsText;
         resultsList.appendChild(resultItem);
     });
     console.log('Results list updated.');
